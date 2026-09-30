@@ -1,11 +1,12 @@
 services:
   app:
-    image: mcr.microsoft.com/devcontainers/javascript-node:22
+    image: node:22
     volumes:
       - ..:/workspaces/RunX:cached
     command: sleep infinity
     environment:
-      MONGODB_URI: mongodb://mongo:27017/runx
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB: RunX
     depends_on:
       - mongo
 
@@ -13,6 +14,12 @@ services:
     image: mongo:7
     restart: unless-stopped
     volumes:
-      - ../Data:/data/db
+      # Volume Docker plutôt qu'un dossier macOS : MongoDB exige d'être propriétaire
+      # de ses fichiers, ce qu'un montage depuis macOS ne permet pas.
+      - mongo-data:/data/db
     ports:
       - "27017:27017"
+
+volumes:
+  mongo-data:
+    name: runx-mongo-data

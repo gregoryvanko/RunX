@@ -1,0 +1,72 @@
+const path = require("path");
+const express = require("express");
+const helmet = require("helmet");
+const config = require("./config");
+const requestLogger = require("./middleware/requestLogger");
+const { requireAuth, requireRole } = require("./middleware/auth");
+const { apiNotFound, dropUnknownRoute, errorHandler } = require("./middleware/errorHandler");
+const authRoutes = require("./routes/auth");
+const meRoutes = require("./routes/me");
+const adminRoutes = require("./routes/admin");
+
+function createApp() {
+  const app = express();
+
+  app.disable("x-powered-by");
+  app.set("trust proxy", config.trustProxy ? 1 : false);
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+          "default-src": ["'self'"],
+          "script-src": ["'self'"],
+          "style-src": ["'self'"],
+          "img-src": ["'self'", "data:"],
+          "connect-src": ["'self'"],
+          "frame-ancestors": ["'none'"],
+          "form-action": ["'self'"],
+          "upgrade-insecure-requests": null,
+        },
+      },
+      // Pas de HSTS forcé : l'application tourne en HTTP en développement
+      strictTransportSecurity: false,
+    })
+  );
+
+  app.use(requestLogger);
+  app.use(express.json({ limit: "100kb" }));
+
+  // --- API v1 -------------------------------------------------------------
+  const api = express.Router();
+  api.use((req, res, next) => {
+    res.set("Cache-Control", "no-store");
+    next();
+  });
+
+  // Routes publiques : uniquement l'inscription et la connexion
+  api.use("/auth", authRoutes);
+
+  // Tout ce qui suit exige une authentification
+  api.use(requireAuth);
+  api.use("/me", meRoutes);
+  api.use("/admin", requireRole("admin"), adminRoutes);
+  api.use(apiNotFound);
+
+  app.use("/api/v1", api);
+  app.use("/api", requireAuth, apiNotFound);
+
+  // --- Interface web ------------------------------------------------------
+  const publicDir = path.join(__dirname, "..", "public");
+  // L'interface navigue par ancres (#/...) : seule la racine sert index.html, pas de route « fourre-tout »
+  app.use(express.static(publicDir, { index: "index.html", redirect: false }));
+
+  // Toute autre route : journalisée comme erreur, connexion fermée sans réponse
+  app.use(dropUnknownRoute);
+
+  app.use(errorHandler);
+  return app;
+}
+
+module.exports = createApp;

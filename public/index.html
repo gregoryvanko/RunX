@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0f1c">
+  <title>RunX</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/api.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar" id="topbar" hidden>
+    <a class="brand" href="#/home" title="Accueil" aria-label="RunX – Accueil">Run<span>X</span></a>
+    <button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="nav" aria-haspopup="true">
+      <span class="burger-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+      Menu
+    </button>
+    <nav class="nav" id="nav">
+      <a href="#/account" data-route="account">Mon compte</a>
+      <a href="#/admin/users" data-route="admin/users" data-admin hidden>Utilisateurs</a>
+      <a href="#/admin/logs" data-route="admin/logs" data-admin hidden>Logs</a>
+      <button type="button" class="nav-logout" id="logout">Déconnexion</button>
+    </nav>
+  </header>
+  <main id="view" class="view" tabindex="-1"></main>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
