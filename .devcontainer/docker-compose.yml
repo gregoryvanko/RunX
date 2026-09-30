@@ -1,0 +1,18 @@
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/javascript-node:22
+    volumes:
+      - ..:/workspaces/RunX:cached
+    command: sleep infinity
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/runx
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - ../Data:/data/db
+    ports:
+      - "27017:27017"

@@ -1,0 +1,16 @@
+{
+  "name": "Node + MongoDB",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/RunX",
+  "forwardPorts": [3000, 27017, 9229],
+  "postCreateCommand": "npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "mongodb.mongodb-vscode"
+      ]
+    }
+  }
+}
