@@ -20,7 +20,13 @@ Au démarrage, le compte administrateur défini dans `.env` est créé (ou son m
 | `JWT_SECRET` | — | Secret de signature des jetons |
 | `JWT_EXPIRES_IN` | `12h` | Durée de validité d'un jeton |
 | `LOG_RETENTION_DAYS` | `90` | Purge automatique des logs (0 = jamais) |
-| `TRUST_PROXY` | `false` | `true` derrière un reverse proxy (IP réelle dans les logs) |
+| `TRUST_PROXY` | `false` | Nombre de relais de confiance devant l'application (IP réelle dans les logs et pour le limiteur de connexions) : `true`/`1` = un reverse proxy, `2` = Traefik + tunnel Cloudflare |
+
+### Derrière Traefik et un tunnel Cloudflare
+
+Pour voir l'IP publique réelle du visiteur :
+1. Traefik doit faire confiance à `cloudflared`, sinon il écrase `X-Forwarded-For` : ajouter `--entrypoints.websecure.forwardedHeaders.trustedIPs=<réseau de cloudflared>` (jamais `0.0.0.0/0`).
+2. Mettre `TRUST_PROXY=2` (Traefik + cloudflared). Depuis le réseau local (un seul relais), l'IP reste correcte.
 
 ## Sécurité
 

@@ -13,7 +13,7 @@ function createApp() {
   const app = express();
 
   app.disable("x-powered-by");
-  app.set("trust proxy", config.trustProxy ? 1 : false);
+  app.set("trust proxy", config.trustProxy);
 
   app.use(
     helmet({
@@ -61,6 +61,11 @@ function createApp() {
   const publicDir = path.join(__dirname, "..", "public");
   // L'interface navigue par ancres (#/...) : seule la racine sert index.html, pas de route « fourre-tout »
   app.use(express.static(publicDir, { index: "index.html", redirect: false }));
+
+  // Les navigateurs réclament /favicon.ico d'eux-mêmes : on leur sert l'icône SVG au lieu d'une erreur
+  app.get("/favicon.ico", (req, res) => {
+    res.type("image/svg+xml").set("Cache-Control", "public, max-age=86400").sendFile(path.join(publicDir, "favicon.svg"));
+  });
 
   // Toute autre route : journalisée comme erreur, connexion fermée sans réponse
   app.use(dropUnknownRoute);

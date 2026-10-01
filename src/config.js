@@ -8,6 +8,13 @@ function required(name) {
   return value.trim();
 }
 
+// TRUST_PROXY : "false" (défaut), "true" (= 1 relais) ou un nombre de relais de confiance (ex. 2 = Traefik + cloudflared)
+function parseTrustProxy(value) {
+  const v = String(value ?? "").trim().toLowerCase();
+  if (/^\d+$/.test(v)) return Number(v);
+  return v === "true" ? 1 : false;
+}
+
 const config = {
   port: Number(process.env.PORT) || 3000,
   mongoUri: process.env.MONGODB_URI || "mongodb://mongo:27017",
@@ -17,7 +24,7 @@ const config = {
   jwtSecret: required("JWT_SECRET"),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "12h",
   logRetentionDays: Number(process.env.LOG_RETENTION_DAYS ?? 90),
-  trustProxy: process.env.TRUST_PROXY === "true",
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
 };
 
 if (config.jwtSecret.length < 32) {
