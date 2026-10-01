@@ -1,0 +1,13 @@
+{
+  // Cette tache permet de build l'image docker pour l'architecture amd64
+  // pour l'executer il faut aller dans le command palette (ctrl+shift+p) et taper "Run Task" puis choisir "Build Docker amd64"
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Docker amd64",
+      "type": "shell",
+      "command": "docker buildx build --platform linux/amd64 -t runx-amd64:latest --load .",
+      "group": { "kind": "build", "isDefault": true }
+    }
+  ]
+}
