@@ -37,6 +37,29 @@
     toastTimer = setTimeout(() => { toastEl.hidden = true; }, 3500);
   }
 
+  // Confirmation intégrée (remplace window.confirm, bloqué par certains navigateurs embarqués)
+  // Résout true si l'utilisateur confirme, false sinon (Annuler, Échap, clic hors de la fenêtre)
+  function askConfirm(message, { title = "Confirmation", confirmLabel = "Confirmer", danger = false } = {}) {
+    return new Promise((resolve) => {
+      const cancelBtn = h("button", { class: "btn ghost", type: "button", onclick: () => dialog.close("cancel") }, "Annuler");
+      const okBtn = h("button", { class: `btn${danger ? " danger-solid" : ""}`, type: "button", onclick: () => dialog.close("ok") }, confirmLabel);
+      const dialog = h("dialog", { class: "confirm", "aria-labelledby": "confirm-title" },
+        h("h2", { id: "confirm-title" }, title),
+        h("p", {}, message),
+        h("div", { class: "confirm-actions" }, cancelBtn, okBtn));
+      const opener = document.activeElement;
+      dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close("cancel"); });
+      dialog.addEventListener("close", () => {
+        dialog.remove();
+        if (opener && opener.isConnected) opener.focus({ preventScroll: true });
+        resolve(dialog.returnValue === "ok");
+      });
+      document.body.append(dialog);
+      dialog.showModal();
+      cancelBtn.focus();
+    });
+  }
+
   const fmtDate = (d) => (d ? new Date(d).toLocaleString("fr-FR") : "—");
 
   function render(...nodes) {
@@ -95,6 +118,7 @@
     const displayName = h("input", { id: "displayName", name: "displayName", autocomplete: "name", maxlength: 64 });
     const password = h("input", { id: "password", name: "password", type: "password", required: true, minlength: isLogin ? null : 8, maxlength: 128, autocomplete: isLogin ? "current-password" : "new-password" });
     const confirm = h("input", { id: "confirm", name: "confirm", type: "password", required: true, autocomplete: "new-password" });
+    const remember = h("input", { id: "remember", type: "checkbox", checked: true });
     const error = h("p", { class: "error full", role: "alert" });
     const submit = h("button", { class: "btn block", type: "submit" }, isLogin ? "Se connecter" : "Créer mon compte");
 
@@ -108,9 +132,9 @@
       withBusy(submit, async () => {
         try {
           const res = isLogin
-            ? await Api.login(username.value, password.value)
+            ? await Api.login(username.value, password.value, remember.checked)
             : await Api.register(username.value, displayName.value, password.value);
-          Api.session.save(res.token, res.user);
+          Api.session.save(res.token, res.user, isLogin && remember.checked);
           location.hash = "#/home";
         } catch (err) {
           error.textContent = err.message;
@@ -121,6 +145,7 @@
       !isLogin && field("Nom affiché (facultatif)", displayName),
       field("Mot de passe", password, isLogin ? "full" : ""),
       !isLogin && field("Confirmation", confirm),
+      isLogin && h("label", { class: "check full", for: "remember" }, remember, "Rester connecté"),
       error,
       h("div", { class: "full" }, submit)
     );
@@ -136,6 +161,12 @@
     username.focus();
   }
 
+  // Actions d'administration affichées sur l'accueil : un cadre par action
+  const adminActions = [
+    { title: "Utilisateurs", description: "Gérez les comptes : rôles et suppression.", href: "#/admin/users", button: "Gérer les utilisateurs" },
+    { title: "Logs", description: "Consultez l'activité et les erreurs de l'application.", href: "#/admin/logs", button: "Voir les logs" },
+  ];
+
   async function homeView() {
     const { user } = await Api.me();
     Api.session.save(null, user);
@@ -144,17 +175,11 @@
       h("section", { class: "hero" },
         h("h1", {}, `Bienvenue, ${user.displayName} !`),
         h("p", {}, user.role === "admin" ? "Vous êtes connecté en tant qu'administrateur." : "Heureux de vous revoir sur RunX.")),
-      h("div", { class: "grid" },
-        h("section", { class: "card" }, h("h2", {}, "Mon profil"),
-          h("dl", { class: "kv" },
-            h("dt", {}, "Identifiant"), h("dd", {}, user.username),
-            h("dt", {}, "Nom"), h("dd", {}, user.displayName),
-            h("dt", {}, "Rôle"), h("dd", {}, h("span", { class: `badge ${user.role}` }, user.role === "admin" ? "Administrateur" : "Utilisateur")),
-            h("dt", {}, "Inscrit le"), h("dd", {}, fmtDate(user.createdAt)))),
-        isAdmin() && h("section", { class: "card" }, h("h2", {}, "Administration"),
-          h("p", { class: "muted" }, "Gérez les comptes et consultez l'activité de l'application."),
-          h("p", {}, h("a", { class: "btn", href: "#/admin/users" }, "Utilisateurs"), " ",
-            h("a", { class: "btn ghost", href: "#/admin/logs" }, "Logs"))))
+      ...(isAdmin() ? [h("div", { class: "grid" },
+        adminActions.map((a) => h("section", { class: "card action-card" },
+          h("h2", {}, a.title),
+          h("p", { class: "muted" }, a.description),
+          h("a", { class: "btn", href: a.href }, a.button))))] : [])
     );
   }
 
@@ -229,7 +254,9 @@
           const del = locked
             ? h("span", { class: "badge" }, u.protected === "self" ? "Votre compte" : "Protégé")
             : h("button", { class: "btn danger small", type: "button", onclick: () => withBusy(del, async () => {
-              if (!confirm(`Supprimer définitivement « ${u.username} » et toutes ses données ?`)) return;
+              const ok = await askConfirm(`Supprimer définitivement « ${u.username} » et toutes ses données ? Cette action est irréversible.`,
+                { title: "Supprimer l'utilisateur", confirmLabel: "Supprimer", danger: true });
+              if (!ok) return;
               try {
                 await Api.deleteUser(u.id);
                 toast(`${u.username} supprimé`);
@@ -292,7 +319,9 @@
           h("td", { "data-label": "Utilisateur" }, l.username || "—"),
           h("td", { "data-label": "Détail", class: "mono" },
             l.type === "request" ? `${l.method} ${l.url} → ${l.status === 444 ? "444 sans réponse" : l.status} (${l.durationMs} ms)` : `${l.action ? `[${l.action}] ` : ""}${l.message}`),
-          h("td", { "data-label": "Appelant", class: "mono col-tight" }, `${l.ip || "?"} · ${l.client || "?"}`)));
+          // IP et client sur deux lignes : une IPv6 peut se couper sans élargir le tableau
+          h("td", { "data-label": "Appelant", class: "mono col-caller" },
+            h("div", {}, h("span", {}, l.ip || "?"), h("span", { class: "muted" }, l.client || "?")))));
         results.replaceChildren(
           h("div", { class: "table-wrap" }, h("table", { class: "responsive" },
             h("thead", {}, h("tr", {}, ["Date", "Type", "Niveau", "Utilisateur", "Détail", "Appelant"].map((t) => h("th", {}, t)))),

@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
     displayName: { type: String, required: true, trim: true, maxlength: 64 },
     passwordHash: { type: String, required: true, select: false },
     role: { type: String, enum: ROLES, default: "user" },
-    // Incrémenté à la déconnexion / au changement de mot de passe pour invalider les jetons existants
+    // Incrémenté au changement de mot de passe ou de rôle pour invalider tous les jetons existants
     tokenVersion: { type: Number, default: 0 },
     lastLoginAt: { type: Date },
   },

@@ -1,6 +1,7 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const User = require("../models/User");
+const RevokedToken = require("../models/RevokedToken");
 const { hashPassword, verifyPassword } = require("../utils/password");
 const { validateUsername, validatePassword, validateDisplayName, str } = require("../utils/validate");
 const { HttpError, asyncHandler } = require("../utils/httpError");
@@ -49,6 +50,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const username = str(req.body?.username).trim().toLowerCase();
     const password = str(req.body?.password);
+    const remember = req.body?.remember === true;
 
     const user = username ? await User.findOne({ username }).select("+passwordHash") : null;
     const valid = await verifyPassword(password, user ? user.passwordHash : await dummyHashPromise);
@@ -69,8 +71,8 @@ router.post(
     user.lastLoginAt = new Date();
     await user.save();
     req.user = user;
-    await logActivity(req, "auth.login", `Connexion de ${user.username}`);
-    res.json({ token: signToken(user), user: user.toPublic() });
+    await logActivity(req, "auth.login", `Connexion de ${user.username}${remember ? " (rester connecté)" : ""}`);
+    res.json({ token: signToken(user, remember), user: user.toPublic() });
   })
 );
 
@@ -78,9 +80,19 @@ router.post(
   "/logout",
   requireAuth,
   asyncHandler(async (req, res) => {
-    // Révoque tous les jetons de l'utilisateur
-    req.user.tokenVersion += 1;
-    await req.user.save();
+    // Ne ferme que la session de cet appareil : les autres appareils restent connectés
+    const { jti, exp } = req.tokenPayload;
+    if (jti) {
+      await RevokedToken.updateOne(
+        { jti },
+        { $setOnInsert: { jti, userId: req.user._id, expiresAt: new Date(exp * 1000) } },
+        { upsert: true }
+      );
+    } else {
+      // Jeton émis avant l'ajout des identifiants : impossible à révoquer seul, on révoque tout
+      req.user.tokenVersion += 1;
+      await req.user.save();
+    }
     await logActivity(req, "auth.logout", `Déconnexion de ${req.user.username}`);
     res.status(204).end();
   })

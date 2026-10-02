@@ -6,18 +6,29 @@ window.Api = (() => {
   const USER_KEY = "runx.user";
   let onUnauthorized = () => {};
 
+  // « Rester connecté » : localStorage (survit à la fermeture du navigateur), sinon sessionStorage (onglet)
+  const store = () => (localStorage.getItem(TOKEN_KEY) ? localStorage : sessionStorage);
+
   const session = {
-    get token() { return sessionStorage.getItem(TOKEN_KEY); },
+    get token() { return store().getItem(TOKEN_KEY); },
     get user() {
-      try { return JSON.parse(sessionStorage.getItem(USER_KEY)); } catch { return null; }
+      try { return JSON.parse(store().getItem(USER_KEY)); } catch { return null; }
     },
-    save(token, user) {
-      if (token) sessionStorage.setItem(TOKEN_KEY, token);
-      if (user) sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+    // remember n'est utilisé qu'à la connexion ; ensuite le stockage en cours est conservé
+    save(token, user, remember) {
+      let target = store();
+      if (remember !== undefined) {
+        session.clear();
+        target = remember ? localStorage : sessionStorage;
+      }
+      if (token) target.setItem(TOKEN_KEY, token);
+      if (user) target.setItem(USER_KEY, JSON.stringify(user));
     },
     clear() {
-      sessionStorage.removeItem(TOKEN_KEY);
-      sessionStorage.removeItem(USER_KEY);
+      for (const s of [localStorage, sessionStorage]) {
+        s.removeItem(TOKEN_KEY);
+        s.removeItem(USER_KEY);
+      }
     },
   };
 
@@ -61,7 +72,7 @@ window.Api = (() => {
   return {
     session,
     setUnauthorizedHandler(fn) { onUnauthorized = fn; },
-    login: (username, password) => request("POST", "/auth/login", { username, password }),
+    login: (username, password, remember) => request("POST", "/auth/login", { username, password, remember }),
     register: (username, displayName, password) => request("POST", "/auth/register", { username, displayName, password }),
     logout: () => request("POST", "/auth/logout"),
     me: () => request("GET", "/me"),

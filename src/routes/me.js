@@ -36,7 +36,7 @@ router.put(
     user.tokenVersion += 1; // invalide les autres sessions
     await user.save();
     await logActivity(req, "profile.password", `Changement de mot de passe de ${user.username}`);
-    res.json({ token: signToken(user), user: user.toPublic() });
+    res.json({ token: signToken(user, req.tokenRemember), user: user.toPublic() });
   })
 );
 

@@ -19,6 +19,7 @@ Au démarrage, le compte administrateur défini dans `.env` est créé (ou son m
 | `ADMIN_LOGIN` / `ADMIN_PASSWORD` | — | Compte administrateur |
 | `JWT_SECRET` | — | Secret de signature des jetons |
 | `JWT_EXPIRES_IN` | `12h` | Durée de validité d'un jeton |
+| `JWT_REMEMBER_EXPIRES_IN` | `7d` | Durée de validité d'un jeton avec « Rester connecté » (session conservée à la fermeture du navigateur) |
 | `LOG_RETENTION_DAYS` | `90` | Purge automatique des logs (0 = jamais) |
 | `TRUST_PROXY` | `false` | Nombre de relais de confiance devant l'application (IP réelle dans les logs et pour le limiteur de connexions) : `true`/`1` = un reverse proxy, `2` = Traefik + tunnel Cloudflare |
 
@@ -54,7 +55,7 @@ Envoyer l'en-tête `X-Client: ios` pour que les appels soient identifiés comme 
 |---|---|---|---|
 | POST | `/auth/register` | public | `{ username, password, displayName? }` → `201 { token, user }` |
 | POST | `/auth/login` | public | `{ username, password }` → `{ token, user }` |
-| POST | `/auth/logout` | connecté | Révoque les jetons de l'utilisateur → `204` |
+| POST | `/auth/logout` | connecté | Révoque le jeton utilisé (les autres appareils restent connectés) → `204` |
 | GET | `/me` | connecté | `{ user }` |
 | PATCH | `/me` | connecté | `{ displayName }` → `{ user }` |
 | PUT | `/me/password` | connecté | `{ currentPassword, newPassword }` → `{ token, user }` (nouveau jeton) |

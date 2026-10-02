@@ -23,6 +23,8 @@ const config = {
   adminPassword: required("ADMIN_PASSWORD"),
   jwtSecret: required("JWT_SECRET"),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "12h",
+  // Durée d'un jeton « Rester connecté »
+  jwtRememberExpiresIn: process.env.JWT_REMEMBER_EXPIRES_IN || "7d",
   logRetentionDays: Number(process.env.LOG_RETENTION_DAYS ?? 90),
   trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
 };
