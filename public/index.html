@@ -27,6 +27,9 @@
       Menu
     </button>
     <nav class="nav" id="nav">
+      <a href="#/home" data-route="home">Performance</a>
+      <a href="#/runs" data-route="runs">Mes courses</a>
+      <a href="#/explication" data-route="explication">Explication</a>
       <a href="#/account" data-route="account">Mon compte</a>
       <a href="#/admin/users" data-route="admin/users" data-admin hidden>Utilisateurs</a>
       <a href="#/admin/logs" data-route="admin/logs" data-admin hidden>Logs</a>
@@ -34,6 +37,8 @@
     </nav>
   </header>
   <main id="view" class="view" tabindex="-1"></main>
+  <!-- Saisie d'une nouvelle course : accessible depuis tous les écrans une fois connecté -->
+  <button class="fab" id="fab" type="button" hidden><span class="fab-plus" aria-hidden="true">+</span><span class="fab-label">Nouvelle course</span></button>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 </body>
 </html>

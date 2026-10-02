@@ -8,6 +8,7 @@ const { apiNotFound, dropUnknownRoute, errorHandler } = require("./middleware/er
 const authRoutes = require("./routes/auth");
 const meRoutes = require("./routes/me");
 const adminRoutes = require("./routes/admin");
+const runRoutes = require("./routes/runs");
 
 function createApp() {
   const app = express();
@@ -51,6 +52,7 @@ function createApp() {
   // Tout ce qui suit exige une authentification
   api.use(requireAuth);
   api.use("/me", meRoutes);
+  api.use("/runs", runRoutes);
   api.use("/admin", requireRole("admin"), adminRoutes);
   api.use(apiNotFound);
 

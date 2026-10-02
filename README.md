@@ -59,6 +59,12 @@ Envoyer l'en-tête `X-Client: ios` pour que les appels soient identifiés comme 
 | GET | `/me` | connecté | `{ user }` |
 | PATCH | `/me` | connecté | `{ displayName }` → `{ user }` |
 | PUT | `/me/password` | connecté | `{ currentPassword, newPassword }` → `{ token, user }` (nouveau jeton) |
+| GET | `/runs?order=&from=&to=&page=&limit=` | connecté | Courses de l'utilisateur, plus récentes d'abord (`order=asc` : chronologique ; `limit` ≤ 500) → `{ items, total, page, limit }` |
+| POST | `/runs` | connecté | `{ date, distanceKm, durationSec, avgHeartRate, temperatureC, elevationGainM, notes? }` → `201 { run }` |
+| POST | `/runs/preview` | connecté | Mêmes champs (sans `date`) : calcule l'indice sans enregistrer → `{ performance }` |
+| GET | `/runs/:id` | connecté | `{ run }` |
+| PUT / PATCH | `/runs/:id` | connecté | PUT : tous les champs ; PATCH : seulement ceux fournis → `{ run }` |
+| DELETE | `/runs/:id` | connecté | `204` |
 | GET | `/admin/users?q=&page=&limit=` | admin | `{ items, total, page, limit }` |
 | GET | `/admin/users/:id` | admin | `{ user, stats }` |
 | PATCH | `/admin/users/:id/role` | admin | `{ role: "user" \| "admin" }` → `{ user }` |
@@ -66,6 +72,23 @@ Envoyer l'en-tête `X-Client: ios` pour que les appels soient identifiés comme 
 | GET | `/admin/logs?type=&level=&username=&q=&from=&to=&page=&limit=` | admin | `{ items, total, page, limit }` |
 
 Objet `user` : `{ id, username, displayName, role, lastLoginAt, createdAt, updatedAt }`.
+
+Objet `run` : champs saisis (`date` ISO 8601, `distanceKm` 0,1–400, `durationSec` 60–604800, `avgHeartRate` 40–230, `temperatureC` −40–55, `elevationGainM` 0–20000, `notes` ≤ 500 car.) + valeurs calculées `{ avgPaceSecPerKm, avgSpeedKmh, effortKm, gradeAdjustedPaceSecPerKm, temperatureFactor, performanceIndex, formulaVersion }` + `{ id, createdAt, updatedAt }`. Chaque utilisateur n'accède qu'à ses propres courses.
+
+### Indice de performance (IPR)
+
+Efficacité de course : vitesse obtenue par battement cardiaque, corrigée du terrain et de la météo (`src/services/performance.js`).
+
+```
+IPR = 100 × vitesse équivalente plat (m/min) × facteur température ÷ FC moyenne
+```
+
+- **Dénivelé** : distance « kilomètre-effort » = distance + D+ / 100 (100 m de D+ ≈ 1 km à plat).
+- **Température** : +0,4 % par °C au-dessus de 12 °C, +0,2 % par °C en dessous de 5 °C (la chaleur et le froid font monter le cœur).
+- Une allure plus rapide obtenue au prix d'une FC proportionnellement plus élevée fait **baisser** l'indice.
+- Repère : 10 km en 50 min à plat, 15 °C, 150 bpm → IPR ≈ 135.
+
+L'indice est calculé à la lecture : une évolution de la formule s'applique à tout l'historique (`formulaVersion` l'indique). Le tableau de bord compare la moyenne des 5 dernières courses aux 5 précédentes (progression au-delà de +1,5 %, baisse en deçà de −1,5 %).
 
 Exemple :
 

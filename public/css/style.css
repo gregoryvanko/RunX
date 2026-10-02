@@ -11,6 +11,11 @@
   --danger: #d92d20;
   --warn: #b54708;
   --radius: 10px;
+  /* Graphique : couleurs validées (contraste, daltonisme) */
+  --series-index: #1e5eff;
+  --series-trend: #e8590c;
+  --good: #067647;
+  --good-soft: #e7f6ec;
   --safe-l: env(safe-area-inset-left, 0px);
   --safe-r: env(safe-area-inset-right, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
@@ -152,11 +157,6 @@ dialog.confirm p { margin: 0 0 20px; overflow-wrap: anywhere; }
 }
 .hero h1 { color: var(--white); font-size: 1.5rem; margin-bottom: 2px; }
 .hero p { color: #c7d2fe; margin: 0; }
-/* Cadre d'action : le bouton reste aligné en bas même si les descriptions ont des longueurs différentes */
-.action-card { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 0; }
-.action-card p { flex: 1; margin: 0 0 16px; }
-/* Boutons pleine largeur : tous identiques, quelle que soit la longueur du libellé */
-.action-card .btn { align-self: stretch; }
 .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 
 /* ---------- Tables ---------- */
@@ -186,6 +186,134 @@ td.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fo
 .badge.level-error { background: var(--danger); color: var(--white); }
 .badge.level-info { background: var(--blue-soft); color: var(--blue-dark); }
 .pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+
+/* ---------- Performance : indicateurs ---------- */
+.tiles { display: grid; gap: 12px; grid-template-columns: repeat(4, 1fr); margin-bottom: 18px; }
+.tile {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px;
+}
+.tile-label { font-size: .8rem; font-weight: 600; color: var(--grey); }
+.tile-value { font-size: 1.9rem; font-weight: 700; line-height: 1.2; color: var(--black); }
+.tile-sub { font-size: .82rem; }
+.tile-status {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+  margin: 6px 0 4px; padding: 3px 10px; border-radius: 999px; font-weight: 700; font-size: .95rem;
+  background: var(--blue-soft); color: var(--blue-dark);
+}
+.tile-status.up { background: var(--good-soft); color: var(--good); }
+.tile-status.down { background: #fdecea; color: var(--danger); }
+.tile-status span { font-size: .7rem; }
+
+/* ---------- Performance : graphique ---------- */
+/* Sélecteur à côté du titre tant que le titre garde au moins 11rem, puis renvoyé à la ligne */
+.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
+.chart-head > div { flex: 1 1 11rem; min-width: 0; }
+.chart-head h2 { margin-bottom: 0; }
+.chart-head select { width: auto; flex: 0 0 auto; }
+.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; margin-top: 6px; font-size: .82rem; color: var(--grey); }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.legend-key, .tip-key { display: inline-block; width: 16px; height: 2px; border-radius: 1px; }
+.legend-key.index, .tip-key.index { background: var(--series-index); }
+.legend-key.trend, .tip-key.trend { background: var(--series-trend); }
+.chart { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.chart-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart-svg:focus { outline: none; }
+.chart-svg:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+.chart-grid line { stroke: #eceff5; stroke-width: 1; }
+.chart-grid text { fill: var(--grey); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart-ytick { text-anchor: end; dominant-baseline: middle; }
+.chart-xtick { text-anchor: middle; }
+.chart-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-line.index { stroke: var(--series-index); opacity: .55; }
+.chart-line.trend { stroke: var(--series-trend); }
+.chart-dots circle { fill: var(--series-index); stroke: var(--white); stroke-width: 2; }
+.chart-dots circle.active { r: 6; }
+.chart-trend-end { fill: var(--series-trend); stroke: var(--white); stroke-width: 2; }
+.chart-cross { stroke: var(--grey); stroke-width: 1; }
+.chart-tip {
+  position: absolute; top: 8px; z-index: 2; pointer-events: none;
+  min-width: 170px; max-width: min(260px, 70%); padding: 8px 10px; font-size: .82rem; line-height: 1.4;
+  background: var(--white); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 20px rgba(10,15,28,.12);
+}
+.tip-date { font-weight: 600; margin-bottom: 4px; }
+.tip-row { display: flex; align-items: center; gap: 6px; }
+.tip-row strong { font-size: .95rem; color: var(--black); }
+.tip-meta { margin-top: 4px; font-size: .76rem; }
+
+.explain p, .explain ul { margin: 8px 0; }
+.explain p:last-child, .explain ul:last-child { margin-bottom: 0; }
+.explain li + li { margin-top: 4px; }
+.explain .formula { background: var(--bg); padding: 10px 12px; border-radius: 8px; word-break: normal; white-space: pre-line; }
+.explain-table { margin: 8px 0; }
+.explain-table td:last-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.empty .btn { margin-top: 4px; }
+
+/* ---------- Liste des courses ---------- */
+.page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.page-head p { margin: 0; }
+.runs-table td.num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.runs-table td.actions .btn + .btn { margin-left: 6px; }
+/* Boutons icône : zone de toucher de 36 px */
+.btn.icon-btn { width: 36px; height: 36px; padding: 0; }
+.icon { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---------- Saisie d'une course ---------- */
+dialog.run-dialog { width: min(560px, calc(100% - 24px - var(--safe-l) - var(--safe-r))); max-height: calc(100dvh - 24px - var(--safe-t) - var(--safe-b)); overflow-y: auto; }
+.run-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.run-form .full { grid-column: 1 / -1; }
+.run-form .error { margin: 0 0 6px; }
+.duration { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.duration input { padding: 0 8px; text-align: center; }
+.run-preview {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 10px;
+  padding: 10px 12px; background: var(--blue-soft); border-radius: 8px;
+}
+.run-preview div { display: flex; flex-direction: column; }
+.run-preview span { font-size: .78rem; }
+.run-preview strong { font-size: 1.15rem; color: var(--blue-dark); font-variant-numeric: tabular-nums; }
+.run-preview .preview-index { font-size: 1.5rem; }
+
+/* Bouton flottant « Nouvelle course » : toujours à portée du pouce */
+.fab {
+  position: fixed; z-index: 15; right: calc(20px + var(--safe-r)); bottom: calc(20px + var(--safe-b));
+  display: inline-flex; align-items: center; gap: 8px; height: 52px; padding: 0 20px 0 16px;
+  font: inherit; font-weight: 700; color: var(--white); background: var(--blue);
+  border: 0; border-radius: 999px; cursor: pointer; box-shadow: 0 8px 24px rgba(30,94,255,.4);
+}
+.fab:hover { background: #164ad1; }
+.fab:focus-visible { outline: 3px solid var(--blue-dark); outline-offset: 2px; }
+.fab-plus { font-size: 1.6rem; line-height: 1; font-weight: 400; margin-top: -2px; }
+/* Place libre sous le contenu pour que le bouton ne masque pas la fin de page */
+.fab:not([hidden]) ~ .toast { bottom: calc(84px + var(--safe-b)); }
+.topbar:not([hidden]) ~ .view { padding-bottom: calc(96px + var(--safe-b)); }
+
+@media (max-width: 900px) {
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 760px) {
+  .tiles { gap: 8px; margin-bottom: 10px; }
+  .tile { padding: 10px 12px; }
+  .tile-value { font-size: 1.5rem; }
+  .chart-head select { height: 38px; padding-left: 10px; padding-right: 30px; background-position: right 10px center; font-size: .9rem; }
+  .page-head { margin: 0 8px 12px; }
+  .page-head .btn { display: none; } /* doublon du bouton flottant */
+  .fab { width: 56px; height: 56px; padding: 0; justify-content: center; }
+  .fab-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .fab-plus { font-size: 2rem; margin: -3px 0 0; }
+  .run-form { grid-template-columns: 1fr; }
+  dialog.run-dialog { padding: 16px; }
+  .runs-table td.num { white-space: normal; }
+  /* Courses en cartes : informations sur deux colonnes, libellé et valeur sur la même ligne */
+  table.responsive.runs-table tr { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; padding: 10px 12px; }
+  table.responsive.runs-table td { display: grid; grid-template-columns: 4rem minmax(0, 1fr); column-gap: 6px; align-items: baseline; width: auto; min-width: 0; padding: 0; }
+  table.responsive.runs-table td::before { font-size: .8rem; }
+  table.responsive.runs-table td.col-date { font-size: inherit; line-height: inherit; white-space: normal; }
+  table.responsive.runs-table td.col-date span span { display: inline; }
+  /* Boutons alignés sur les deux colonnes (Modifier à gauche, Supprimer à droite) */
+  table.responsive.runs-table td.actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 2px; }
+  table.responsive.runs-table td.actions .btn { width: 100%; margin: 0; }
+}
 
 /* ---------- Toast ---------- */
 .toast {
@@ -225,6 +353,12 @@ td.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fo
   table.responsive td.col-caller > div { min-width: 0; }
   table.responsive td.actions { justify-content: flex-end; }
   table.responsive td.actions::before { content: none; }
+}
+
+/* Très petits écrans (iPhone SE…) : plus la place pour libellé et valeur côte à côte, libellé au-dessus */
+@media (max-width: 359px) {
+  table.responsive.runs-table td { grid-template-columns: minmax(0, 1fr); align-content: start; align-items: start; row-gap: 0; }
+  table.responsive.runs-table td::before { font-size: .75rem; }
 }
 
 /* ---------- Smartphone (paysage) : hauteur réduite ---------- */

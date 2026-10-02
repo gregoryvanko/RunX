@@ -1,10 +1,11 @@
 const User = require("../models/User");
 const Log = require("../models/Log");
 const RevokedToken = require("../models/RevokedToken");
+const Run = require("../models/Run");
 
 // Modèles contenant des données rattachées à un utilisateur (champ userId).
 // Ajouter ici tout futur modèle RunX pour qu'il soit purgé à la suppression du compte.
-const USER_OWNED_MODELS = [Log, RevokedToken];
+const USER_OWNED_MODELS = [Log, RevokedToken, Run];
 
 async function deleteUserCascade(userId) {
   const deleted = {};

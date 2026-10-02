@@ -82,5 +82,11 @@ window.Api = (() => {
     setRole: (id, role) => request("PATCH", `/admin/users/${encodeURIComponent(id)}/role`, { role }),
     deleteUser: (id) => request("DELETE", `/admin/users/${encodeURIComponent(id)}`),
     listLogs: (params) => request("GET", `/admin/logs${query(params)}`),
+    listRuns: (params) => request("GET", `/runs${query(params)}`),
+    getRun: (id) => request("GET", `/runs/${encodeURIComponent(id)}`),
+    createRun: (run) => request("POST", "/runs", run),
+    updateRun: (id, run) => request("PUT", `/runs/${encodeURIComponent(id)}`, run),
+    deleteRun: (id) => request("DELETE", `/runs/${encodeURIComponent(id)}`),
+    previewRun: (run) => request("POST", "/runs/preview", run),
   };
 })();
