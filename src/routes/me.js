@@ -5,6 +5,7 @@ const { validatePassword, validateDisplayName, str } = require("../utils/validat
 const { HttpError, asyncHandler } = require("../utils/httpError");
 const { signToken } = require("../middleware/auth");
 const { logActivity } = require("../services/logger");
+const { validateRun } = require("./runs");
 
 // Données de l'utilisateur connecté uniquement : l'identité vient toujours du jeton (req.user)
 const router = express.Router();
@@ -37,6 +38,29 @@ router.put(
     await user.save();
     await logActivity(req, "profile.password", `Changement de mot de passe de ${user.username}`);
     res.json({ token: signToken(user, req.tokenRemember), user: user.toPublic() });
+  })
+);
+
+// Objectif d'indice : mêmes champs qu'une course (sans date ni notes)
+router.put(
+  "/target",
+  asyncHandler(async (req, res) => {
+    const { date, notes, ...target } = validateRun({ ...req.body, date: new Date().toISOString(), notes: undefined });
+    req.user.target = target;
+    await req.user.save();
+    const user = req.user.toPublic();
+    await logActivity(req, "profile.target", `Objectif d'indice fixé à ${user.target.performanceIndex}`, target);
+    res.json({ user });
+  })
+);
+
+router.delete(
+  "/target",
+  asyncHandler(async (req, res) => {
+    req.user.target = undefined;
+    await req.user.save();
+    await logActivity(req, "profile.target.delete", "Suppression de l'objectif d'indice");
+    res.json({ user: req.user.toPublic() });
   })
 );
 

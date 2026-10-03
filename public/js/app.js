@@ -225,6 +225,92 @@
     });
   }
 
+  // ---------- Objectif d'indice : course « type » visée, mêmes variables que l'indice ----------
+  // Résout avec l'utilisateur mis à jour (objectif enregistré ou supprimé), ou null si annulée
+  function targetDialog(target) {
+    return new Promise((resolve) => {
+      const num = (id, attrs) => h("input", { id, type: "number", required: true, ...attrs });
+      const dur = target ? target.durationSec : null;
+      const distance = num("target-distance", { inputmode: "decimal", step: "0.01", min: "0.1", max: "400", placeholder: "10,0", value: target ? target.distanceKm : null });
+      const hours = num("target-h", { inputmode: "numeric", min: "0", max: "168", placeholder: "h", "aria-label": "Heures", value: dur !== null ? Math.floor(dur / 3600) : null });
+      const minutes = num("target-m", { inputmode: "numeric", min: "0", max: "59", placeholder: "min", "aria-label": "Minutes", value: dur !== null ? Math.floor((dur % 3600) / 60) : null });
+      const seconds = num("target-s", { inputmode: "numeric", min: "0", max: "59", placeholder: "s", "aria-label": "Secondes", value: dur !== null ? dur % 60 : null });
+      const heartRate = num("target-hr", { inputmode: "numeric", min: "40", max: "230", placeholder: "150", value: target ? target.avgHeartRate : null });
+      const temperature = num("target-temp", { step: "0.5", min: "-40", max: "55", placeholder: "15", value: target ? target.temperatureC : null });
+      const elevation = num("target-elev", { inputmode: "numeric", min: "0", max: "20000", placeholder: "0", value: target ? target.elevationGainM : null });
+      const error = h("p", { class: "error", role: "alert" });
+      const previewPace = h("strong", {}, "—");
+      const previewIndex = h("strong", { class: "preview-index" }, "—");
+      const submit = h("button", { class: "btn", type: "submit" }, "Enregistrer");
+      const cancel = h("button", { class: "btn ghost", type: "button", onclick: () => dialog.close() }, "Annuler");
+      const remove = target && h("button", { class: "btn danger", type: "button", onclick: () => withBusy(remove, async () => {
+        try { result = (await Api.deleteTarget()).user; dialog.close(); } catch (err) { error.textContent = err.message; }
+      }) }, "Supprimer");
+
+      const n = (input) => (input.value === "" ? NaN : Number(input.value.replace(",", ".")));
+      const payload = () => ({
+        distanceKm: n(distance),
+        durationSec: (n(hours) || 0) * 3600 + (n(minutes) || 0) * 60 + (n(seconds) || 0),
+        avgHeartRate: n(heartRate),
+        temperatureC: n(temperature),
+        elevationGainM: elevation.value === "" ? 0 : n(elevation),
+      });
+
+      let previewTimer, previewSeq = 0;
+      function refreshPreview() {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(async () => {
+          const p = payload();
+          const seq = ++previewSeq;
+          if (!(p.distanceKm > 0 && p.durationSec > 0)) { previewPace.textContent = "—"; previewIndex.textContent = "—"; return; }
+          previewPace.textContent = fmtPace(p.durationSec / p.distanceKm);
+          if ([p.avgHeartRate, p.temperatureC].some(Number.isNaN)) { previewIndex.textContent = "—"; return; }
+          try {
+            const { performance } = await Api.previewRun(p);
+            if (seq === previewSeq) previewIndex.textContent = fmtNum(performance.performanceIndex);
+          } catch { if (seq === previewSeq) previewIndex.textContent = "—"; }
+        }, 250);
+      }
+
+      const form = h("form", { class: "run-form", novalidate: true, oninput: refreshPreview, onsubmit: (e) => {
+        e.preventDefault();
+        error.textContent = "";
+        const p = payload();
+        if (Number.isNaN(p.temperatureC)) { error.textContent = "La température est obligatoire"; return; }
+        withBusy(submit, async () => {
+          try { result = (await Api.setTarget(p)).user; dialog.close(); } catch (err) { error.textContent = err.message; }
+        });
+      } },
+        h("p", { class: "muted full target-intro" }, "Décrivez la course que vous visez : son indice sera tracé en pointillés sur le graphique."),
+        field("Distance (km)", distance),
+        h("div", { class: "field" }, h("label", { for: "target-h" }, "Durée (h : min : s)"),
+          h("div", { class: "duration" }, hours, minutes, seconds)),
+        field("FC moyenne (bpm)", heartRate),
+        field("Température (°C)", temperature),
+        field("Dénivelé positif (m)", elevation),
+        h("div", { class: "run-preview full", "aria-live": "polite" },
+          h("div", {}, h("span", { class: "muted" }, "Allure visée"), previewPace),
+          h("div", {}, h("span", { class: "muted" }, "Indice objectif"), previewIndex)),
+        h("div", { class: "full" }, error),
+        h("div", { class: "confirm-actions full" }, remove, cancel, submit));
+
+      let result = null;
+      const dialog = h("dialog", { class: "confirm run-dialog", "aria-labelledby": "target-dialog-title" },
+        h("h2", { id: "target-dialog-title" }, "Objectif d'indice"), form);
+      const opener = document.activeElement;
+      dialog.addEventListener("close", () => {
+        clearTimeout(previewTimer);
+        dialog.remove();
+        if (opener && opener.isConnected) opener.focus({ preventScroll: true });
+        resolve(result);
+      });
+      document.body.append(dialog);
+      dialog.showModal();
+      if (target) refreshPreview();
+      distance.focus();
+    });
+  }
+
   // ---------- Courses : graphique d'évolution (SVG, sans bibliothèque) ----------
   const SVG_NS = "http://www.w3.org/2000/svg";
   function s(tag, attrs, ...children) {
@@ -241,7 +327,8 @@
   }
 
   // points : [{ date, performanceIndex, trend, avgPaceSecPerKm, avgHeartRate, ... }] dans l'ordre chronologique
-  function perfChart(points) {
+  // targetIndex : indice objectif (ligne horizontale en pointillés), ou null
+  function perfChart(points, targetIndex = null) {
     const wrap = h("div", { class: "chart" });
     const tooltip = h("div", { class: "chart-tip", role: "status" });
     tooltip.hidden = true;
@@ -254,6 +341,7 @@
       const m = { l: 40, r: 14, t: 14, b: 30 };
       const pw = W - m.l - m.r, ph = H - m.t - m.b;
       const values = points.flatMap((p) => [p.performanceIndex, p.trend]);
+      if (targetIndex !== null) values.push(targetIndex);
       let lo = Math.min(...values), hi = Math.max(...values);
       if (hi - lo < 4) { lo -= 2; hi += 2; }
       const step = niceStep(hi - lo, 4);
@@ -291,7 +379,10 @@
       const cross = s("line", { class: "chart-cross", y1: m.t, y2: m.t + ph, visibility: "hidden" });
       const dots = s("g", { class: "chart-dots" }, ...points.map((p, i) => s("circle", { cx: x(i), cy: y(p.performanceIndex), r: 4 })));
       const endTrend = points[n - 1];
-      svg.append(grid, cross,
+      const target = targetIndex !== null && s("g", { class: "chart-target" },
+        s("line", { x1: m.l, x2: W - m.r, y1: y(targetIndex), y2: y(targetIndex) }),
+        s("text", { x: W - m.r, y: y(targetIndex) - 5 }, `Objectif ${fmtNum(targetIndex)}`));
+      svg.append(grid, ...(target ? [target] : []), cross,
         s("path", { d: line("performanceIndex"), class: "chart-line index" }),
         s("path", { d: line("trend"), class: "chart-line trend" }),
         dots,
@@ -312,6 +403,7 @@
         h("div", { class: "tip-date" }, fmtDay(p.date)),
         row("index", fmtNum(p.performanceIndex), "indice"),
         row("trend", fmtNum(p.trend), `tendance (${TREND_WINDOW} courses)`),
+        ...(targetIndex !== null ? [row("target", fmtNum(targetIndex), "objectif")] : []),
         h("div", { class: "tip-meta muted" }, `${fmtNum(p.distanceKm, 2)} km · ${fmtPace(p.avgPaceSecPerKm)} · ${p.avgHeartRate} bpm · ${fmtNum(p.temperatureC)} °C · D+ ${p.elevationGainM} m`));
       tooltip.hidden = false;
       // Infobulle du côté opposé au point pour ne pas le masquer
@@ -363,6 +455,7 @@
   // Icônes des boutons d'action (tracés au trait, couleur du texte du bouton)
   const ICONS = {
     edit: ["M12 20h9", "M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"],
+    target: ["M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0", "M6 12a6 6 0 1 0 12 0a6 6 0 1 0 -12 0", "M10 12a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"],
     trash: ["M3 6h18", "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", "M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6", "M10 11v6", "M14 11v6"],
   };
   const icon = (name) => s("svg", { class: "icon", viewBox: "0 0 24 24", width: 18, height: 18, "aria-hidden": "true", focusable: "false" },
@@ -518,8 +611,28 @@
     const periods = [["15", "15 dernières"], ["30", "30 dernières"], ["all", "Toutes"]];
     const period = h("select", { id: "period", "aria-label": "Courses affichées" },
       periods.map(([v, label]) => h("option", { value: v, selected: v === (runs.length > 30 ? "30" : "all") }, label)));
+    // Objectif : indice d'une course « type » visée, enregistré sur le profil
+    let target = user.target;
     const chartHolder = h("div");
-    const showChart = () => chartHolder.replaceChildren(perfChart(period.value === "all" ? runs : runs.slice(-Number(period.value))));
+    const targetLegend = h("span", {}, h("span", { class: "legend-key target" }), "");
+    const targetBtn = h("button", { class: "btn ghost icon-btn target-btn", type: "button" }, icon("target"));
+    const showChart = () => {
+      chartHolder.replaceChildren(perfChart(period.value === "all" ? runs : runs.slice(-Number(period.value)), target ? target.performanceIndex : null));
+      targetLegend.hidden = !target;
+      targetLegend.lastChild.textContent = target ? `Objectif (${fmtNum(target.performanceIndex)})` : "";
+      const label = target ? `Modifier l'objectif d'indice (${fmtNum(target.performanceIndex)})` : "Définir un objectif d'indice";
+      targetBtn.title = label;
+      targetBtn.setAttribute("aria-label", label);
+      targetBtn.classList.toggle("active", !!target);
+    };
+    targetBtn.addEventListener("click", async () => {
+      const updated = await targetDialog(target);
+      if (!updated) return;
+      Api.session.save(null, updated);
+      target = updated.target;
+      toast(target ? `Objectif fixé · indice ${fmtNum(target.performanceIndex)}` : "Objectif supprimé");
+      showChart();
+    });
     period.addEventListener("change", showChart);
     showChart();
 
@@ -527,11 +640,12 @@
       h("section", { class: "card" },
         h("div", { class: "chart-head" },
           h("div", {}, h("h2", {}, "Évolution de l'indice de performance")),
-          period),
+          h("div", { class: "chart-tools" }, period, targetBtn)),
         chartHolder,
         h("div", { class: "legend" },
           h("span", {}, h("span", { class: "legend-key index" }), "Indice par course"),
-          h("span", {}, h("span", { class: "legend-key trend" }), `Tendance (moyenne des ${TREND_WINDOW} dernières)`))));
+          h("span", {}, h("span", { class: "legend-key trend" }), `Tendance (moyenne des ${TREND_WINDOW} dernières)`),
+          targetLegend)));
   }
 
   // Explication complète du calcul de l'indice (menu « Explication »)

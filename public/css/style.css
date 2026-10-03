@@ -208,7 +208,10 @@ td.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fo
 /* ---------- Performance : graphique ---------- */
 /* Sélecteur à côté du titre tant que le titre garde au moins 11rem, puis renvoyé à la ligne */
 .chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
-.chart-head > div { flex: 1 1 11rem; min-width: 0; }
+.chart-head > div:first-child { flex: 1 1 11rem; min-width: 0; }
+.chart-tools { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.btn.target-btn { width: 44px; height: 44px; border-color: var(--line); color: var(--blue-dark); }
+.btn.target-btn.active { border-color: var(--blue-dark); background: var(--blue-soft); }
 .chart-head h2 { margin-bottom: 0; }
 .chart-head select { width: auto; flex: 0 0 auto; }
 .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; margin-top: 6px; font-size: .82rem; color: var(--grey); }
@@ -216,6 +219,9 @@ td.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; fo
 .legend-key, .tip-key { display: inline-block; width: 16px; height: 2px; border-radius: 1px; }
 .legend-key.index, .tip-key.index { background: var(--series-index); }
 .legend-key.trend, .tip-key.trend { background: var(--series-trend); }
+.legend-key.target, .tip-key.target { background: repeating-linear-gradient(90deg, var(--blue-dark) 0 4px, transparent 4px 7px); }
+.chart-target line { stroke: var(--blue-dark); stroke-width: 2; stroke-dasharray: 2 5; stroke-linecap: round; }
+.chart-target text { fill: var(--blue-dark); font-size: 11px; font-weight: 600; text-anchor: end; font-variant-numeric: tabular-nums; }
 .chart { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
 .chart-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .chart-svg:focus { outline: none; }
@@ -273,6 +279,7 @@ dialog.run-dialog { width: min(560px, calc(100% - 24px - var(--safe-l) - var(--s
 .run-preview span { font-size: .78rem; }
 .run-preview strong { font-size: 1.15rem; color: var(--blue-dark); font-variant-numeric: tabular-nums; }
 .run-preview .preview-index { font-size: 1.5rem; }
+.run-form .target-intro { margin: 0 0 14px; }
 
 /* Bouton flottant « Nouvelle course » : toujours à portée du pouce */
 .fab {
@@ -295,6 +302,7 @@ dialog.run-dialog { width: min(560px, calc(100% - 24px - var(--safe-l) - var(--s
   .tiles { gap: 8px; margin-bottom: 10px; }
   .tile { padding: 10px 12px; }
   .tile-value { font-size: 1.5rem; }
+  .btn.target-btn { width: 38px; height: 38px; }
   .chart-head select { height: 38px; padding-left: 10px; padding-right: 30px; background-position: right 10px center; font-size: .9rem; }
   .page-head { margin: 0 8px 12px; }
   .page-head .btn { display: none; } /* doublon du bouton flottant */

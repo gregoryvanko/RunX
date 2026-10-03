@@ -77,6 +77,8 @@ window.Api = (() => {
     logout: () => request("POST", "/auth/logout"),
     me: () => request("GET", "/me"),
     updateMe: (displayName) => request("PATCH", "/me", { displayName }),
+    setTarget: (target) => request("PUT", "/me/target", target),
+    deleteTarget: () => request("DELETE", "/me/target"),
     changePassword: (currentPassword, newPassword) => request("PUT", "/me/password", { currentPassword, newPassword }),
     listUsers: (params) => request("GET", `/admin/users${query(params)}`),
     setRole: (id, role) => request("PATCH", `/admin/users/${encodeURIComponent(id)}/role`, { role }),
