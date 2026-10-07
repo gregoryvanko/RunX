@@ -95,7 +95,7 @@ Envoyer l'en-tête `X-Client: ios` pour que les appels soient identifiés comme 
 | DELETE | `/admin/users/:id` | admin | Supprime l'utilisateur et toutes ses données → `{ deleted }` |
 | GET | `/admin/logs?type=&level=&username=&q=&from=&to=&page=&limit=` | admin | `{ items, total, page, limit }` |
 
-Objet `user` : `{ id, username, displayName, role, lastLoginAt, target, createdAt, updatedAt }` ; `target` vaut `null` ou les champs saisis + `{ avgPaceSecPerKm, performanceIndex }` (même formule que les courses).
+Objet `user` : `{ id, username, displayName, role, isMainAdmin, lastLoginAt, target, createdAt, updatedAt }` ; `target` vaut `null` ou les champs saisis + `{ avgPaceSecPerKm, performanceIndex }` (même formule que les courses) ; `isMainAdmin` vaut `true` pour l'administrateur principal (`ADMIN_LOGIN`), dont le compte ne peut pas être supprimé.
 
 Objet `run` : champs saisis (`date` ISO 8601, `distanceKm` 0,1–400, `durationSec` 60–604800, `avgHeartRate` 40–230, `temperatureC` −40–55, `elevationGainM` 0–20000, `notes` ≤ 500 car.) + valeurs calculées `{ avgPaceSecPerKm, avgSpeedKmh, effortKm, gradeAdjustedPaceSecPerKm, temperatureFactor, performanceIndex, formulaVersion }` + `{ id, createdAt, updatedAt }`. Chaque utilisateur n'accède qu'à ses propres courses.
 

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const config = require("../config");
 const { computePerformance } = require("../services/performance");
 
 const ROLES = ["user", "admin"];
@@ -48,6 +49,8 @@ userSchema.methods.toPublic = function toPublic() {
     username: this.username,
     displayName: this.displayName,
     role: this.role,
+    // Administrateur principal (ADMIN_LOGIN) : compte protégé, ne peut pas être supprimé
+    isMainAdmin: this.username === config.adminLogin,
     lastLoginAt: this.lastLoginAt,
     target: this.target ? targetToPublic(this.target) : null,
     createdAt: this.createdAt,

@@ -804,24 +804,28 @@
           });
         } }, h("h2", {}, "Mot de passe"), field("Mot de passe actuel", current), field("Nouveau mot de passe", next),
           field("Confirmation", confirm), pwdError, savePwd)),
-      h("form", { class: "card danger-zone", onsubmit: (e) => {
-        e.preventDefault();
-        delError.textContent = "";
-        if (!delPwd.value) { delError.textContent = "Saisissez votre mot de passe pour confirmer"; return; }
-        withBusy(delBtn, async () => {
-          const ok = await askConfirm("Votre compte, toutes vos courses et votre objectif seront supprimés définitivement. Cette action est irréversible.",
-            { title: "Supprimer mon compte", confirmLabel: "Supprimer définitivement", danger: true });
-          if (!ok) return;
-          try {
-            await Api.deleteAccount(delPwd.value);
-            Api.session.clear();
-            toast("Compte supprimé");
-            location.hash = "#/login";
-          } catch (err) { delError.textContent = err.message; }
-        });
-      } }, h("h2", {}, "Supprimer mon compte"),
-        h("p", { class: "muted" }, "Supprime définitivement votre compte et toutes vos données (courses, objectif). Vos autres appareils seront déconnectés."),
-        field("Mot de passe", delPwd), delError, delBtn)
+      // Le compte administrateur principal est protégé : message à la place du formulaire de suppression
+      user.isMainAdmin
+        ? h("section", { class: "card danger-zone" }, h("h2", {}, "Supprimer mon compte"),
+          h("p", { class: "muted" }, "Votre compte est le compte administrateur principal : il est protégé et ne peut pas être supprimé."))
+        : h("form", { class: "card danger-zone", onsubmit: (e) => {
+          e.preventDefault();
+          delError.textContent = "";
+          if (!delPwd.value) { delError.textContent = "Saisissez votre mot de passe pour confirmer"; return; }
+          withBusy(delBtn, async () => {
+            const ok = await askConfirm("Votre compte, toutes vos courses et votre objectif seront supprimés définitivement. Cette action est irréversible.",
+              { title: "Supprimer mon compte", confirmLabel: "Supprimer définitivement", danger: true });
+            if (!ok) return;
+            try {
+              await Api.deleteAccount(delPwd.value);
+              Api.session.clear();
+              toast("Compte supprimé");
+              location.hash = "#/login";
+            } catch (err) { delError.textContent = err.message; }
+          });
+        } }, h("h2", {}, "Supprimer mon compte"),
+          h("p", { class: "muted" }, "Supprime définitivement votre compte et toutes vos données (courses, objectif). Vos autres appareils seront déconnectés."),
+          field("Mot de passe", delPwd), delError, delBtn)
     );
   }
 
