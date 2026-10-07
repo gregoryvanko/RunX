@@ -6,7 +6,7 @@
     {
       "label": "Build Docker amd64",
       "type": "shell",
-      "command": "docker buildx build --platform linux/amd64 -t runx-amd64:latest --load .",
+      "command": "docker buildx build --platform linux/amd64 -t docker.io/gregoryvanko/runx:latest --load .",
       "group": { "kind": "build", "isDefault": true }
     }
   ]
