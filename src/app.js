@@ -62,7 +62,8 @@ function createApp() {
   // --- Interface web ------------------------------------------------------
   const publicDir = path.join(__dirname, "..", "public");
   // L'interface navigue par ancres (#/...) : seule la racine sert index.html, pas de route « fourre-tout »
-  app.use(express.static(publicDir, { index: "index.html", redirect: false }));
+  // Pages publiques (présentation, support, confidentialité) : accessibles aussi sans « .html » (/support)
+  app.use(express.static(publicDir, { index: "index.html", redirect: false, extensions: ["html"] }));
 
   // Les navigateurs réclament /favicon.ico d'eux-mêmes (et /favicon.svg pour les pages en cache) :
   // on leur sert l'icône SVG au lieu d'une erreur

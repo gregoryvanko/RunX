@@ -1,10 +1,12 @@
 const express = require("express");
+const config = require("../config");
 const User = require("../models/User");
 const { hashPassword, verifyPassword } = require("../utils/password");
 const { validatePassword, validateDisplayName, str } = require("../utils/validate");
 const { HttpError, asyncHandler } = require("../utils/httpError");
 const { signToken } = require("../middleware/auth");
 const { logActivity } = require("../services/logger");
+const { deleteUserCascade } = require("../services/userService");
 const { validateRun } = require("./runs");
 
 // Données de l'utilisateur connecté uniquement : l'identité vient toujours du jeton (req.user)
@@ -61,6 +63,27 @@ router.delete(
     await req.user.save();
     await logActivity(req, "profile.target.delete", "Suppression de l'objectif d'indice");
     res.json({ user: req.user.toPublic() });
+  })
+);
+
+// Suppression de son propre compte (exigence App Store) : mot de passe requis, données supprimées définitivement
+router.delete(
+  "/",
+  asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id).select("+passwordHash");
+    if (user.username === config.adminLogin) throw new HttpError(400, "Le compte administrateur principal est protégé");
+    if (!(await verifyPassword(str(req.body?.password), user.passwordHash))) {
+      await logActivity(req, "account.delete.failed", "Suppression du compte refusée : mot de passe incorrect", null, { level: "warn" });
+      throw new HttpError(400, "Mot de passe incorrect");
+    }
+    const deleted = await deleteUserCascade(user._id);
+    // Plus aucune trace rattachée au compte : la requête et l'audit sont journalisés sans userId
+    req.user = undefined;
+    await logActivity(req, "account.delete", `Suppression du compte ${user.username} par son titulaire`, {
+      targetUsername: user.username,
+      deleted,
+    });
+    res.status(204).end();
   })
 );
 

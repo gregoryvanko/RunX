@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0f1c">
+  <meta name="description" content="RunX mesure votre progression en course à pied grâce à un indice de performance qui tient compte de la fréquence cardiaque, du dénivelé et de la température.">
+  <title>RunX – Présentation</title>
+  <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <header class="site-top">
+    <a class="brand" href="/about.html" aria-label="RunX – Présentation">Run<span>X</span></a>
+    <nav class="site-nav" aria-label="Pages RunX">
+      <a href="/about.html" aria-current="page">L'application</a>
+      <a href="/support.html">Support</a>
+      <a href="/privacy.html">Confidentialité</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="kicker"><span>Course à pied</span></p>
+      <h1>Courez plus vite.<br>Pour le même effort.</h1>
+      <p>RunX mesure votre vraie progression : la vitesse que vous tenez pour chaque battement de cœur, corrigée du dénivelé et de la température.</p>
+      <div class="stats">
+        <div class="stat"><b>1</b><span>indice pour suivre votre forme</span></div>
+        <div class="stat"><b>3</b><span>facteurs pris en compte : cœur, D+, météo</span></div>
+        <div class="stat"><b>0</b><span>publicité, 0 pistage</span></div>
+      </div>
+      <div class="actions">
+        <a class="btn" href="/">Ouvrir l'application web</a>
+        <a class="btn ghost" href="/support.html">Besoin d'aide ?</a>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <section class="section">
+      <h2>Pourquoi RunX ?</h2>
+      <p class="lead">Votre chrono ne dit pas tout. Une sortie en côte, par 28 °C, peut être bien meilleure qu'un footing rapide à plat où votre cœur s'est emballé. RunX rend vos courses comparables entre elles, quelles que soient les conditions, pour savoir si vous progressez vraiment.</p>
+    </section>
+
+    <section class="section">
+      <h2>Ce que fait l'application</h2>
+      <div class="features">
+        <article class="feature">
+          <span class="num">01</span>
+          <h3>Journal de courses</h3>
+          <p>Enregistrez chaque sortie : date, distance, durée, fréquence cardiaque moyenne, température, dénivelé positif et notes.</p>
+        </article>
+        <article class="feature">
+          <span class="num">02</span>
+          <h3>Indice en direct</h3>
+          <p>Pendant la saisie, l'allure moyenne et l'indice de performance s'affichent instantanément.</p>
+        </article>
+        <article class="feature">
+          <span class="num">03</span>
+          <h3>Tableau de bord</h3>
+          <p>Dernière course, meilleur indice, tendance sur vos 5 dernières sorties et graphique d'évolution.</p>
+        </article>
+        <article class="feature">
+          <span class="num">04</span>
+          <h3>Objectif</h3>
+          <p>Décrivez la course que vous visez : son indice devient une ligne de référence sur votre graphique.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Comment ça marche</h2>
+      <ol class="steps">
+        <li><strong>Créez votre compte</strong>Un identifiant et un mot de passe suffisent. Aucune adresse e-mail n'est demandée.</li>
+        <li><strong>Saisissez vos courses</strong>Reportez les données de votre montre ou de votre application d'entraînement après chaque sortie.</li>
+        <li><strong>Suivez votre indice</strong>RunX calcule l'indice de chaque course et compare la moyenne de vos 5 dernières sorties aux 5 précédentes : en progression, stable ou en baisse.</li>
+        <li><strong>Fixez un objectif</strong>Visualisez l'écart entre votre forme actuelle et la course que vous préparez.</li>
+      </ol>
+    </section>
+
+    <section class="section">
+      <h2>L'indice de performance (IPR)</h2>
+      <div class="card">
+        <p>L'indice mesure votre efficacité. Courir plus vite ne suffit pas : si votre cœur doit battre beaucoup plus fort pour y parvenir, vous forcez davantage, vous n'êtes pas plus performant.</p>
+        <p class="formula">IPR = 100 × vitesse équivalente plat (m/min) × correction température ÷ FC moyenne (bpm)</p>
+        <h3>Dénivelé</h3>
+        <p>Chaque 100 m de dénivelé positif compte comme 1 km supplémentaire à plat (règle du « kilomètre-effort »). Une sortie vallonnée n'est pas pénalisée.</p>
+        <h3>Température</h3>
+        <p>La chaleur et le froid font monter le cœur. L'indice est relevé de 0,4 % par °C au-dessus de 12 °C et de 0,2 % par °C en dessous de 5 °C.</p>
+        <h3>Exemples</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Course</th><th>Indice</th></tr></thead>
+            <tbody>
+              <tr><td>10 km en 50:00, plat, 15 °C, 150 bpm</td><td>134,9</td></tr>
+              <tr><td>Plus rapide (48:20) mais à 162 bpm</td><td>129,2 ↓</td></tr>
+              <tr><td>Même allure qu'au départ, à 145 bpm</td><td>139,6 ↑</td></tr>
+              <tr><td>50:00 avec 100 m de D+, 25 °C, 155 bpm</td><td>149,3</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted">L'indice sert à vous comparer à vous-même : la fréquence cardiaque est propre à chacun. Les comparaisons sont plus fiables entre séances de même type (endurance, fractionné…).</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Vos données vous appartiennent</h2>
+      <p>Pas de publicité, pas de traceur, aucune revente. Vos courses ne servent qu'à calculer vos indices et ne sont visibles que par vous. Détails dans la <a href="/privacy.html">politique de confidentialité</a>.</p>
+      <p class="muted">RunX est un outil de suivi sportif, pas un dispositif médical. En cas de doute sur votre santé ou votre fréquence cardiaque, consultez un médecin.</p>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <div class="site-foot-inner">
+      <span class="copy">© RunX</span>
+      <a href="/about.html">L'application</a>
+      <a href="/support.html">Support</a>
+      <a href="/privacy.html">Confidentialité</a>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,6 +1,27 @@
 # RunX
 
-Application web Node.js (Express + Mongoose + MongoDB) avec authentification, rôles Administrateur / Utilisateur, journalisation complète et une API REST prête pour une application iOS.
+RunX est une application web pour coureurs (installable comme une application sur iPhone) qui mesure la progression grâce à un **indice de performance (IPR)** : la vitesse obtenue par battement cardiaque, corrigée du dénivelé et de la température. Deux sorties réalisées dans des conditions différentes (côtes, chaleur, froid) deviennent ainsi comparables, et l'on voit si l'on court plus vite pour le même effort.
+
+### Comment ça marche
+
+1. **Créer un compte** puis se connecter (option « Rester connecté » pour garder la session).
+2. **Mes courses** : saisir chaque sortie (date, distance, durée, fréquence cardiaque moyenne, température, dénivelé positif, notes). L'allure et l'indice s'affichent en direct pendant la saisie ; les courses restent modifiables et supprimables.
+3. **Performance** (tableau de bord) : indice de la dernière course comparé à la précédente, tendance (moyenne des 5 dernières courses vs les 5 précédentes : progression, stable ou baisse), meilleur indice, nombre de courses, et graphique d'évolution (15, 30 ou toutes les courses). Un **objectif** peut y être fixé en décrivant une course « type » visée : son indice apparaît comme ligne de référence sur le graphique.
+4. **Explication** : détail du calcul de l'indice (voir aussi [Indice de performance (IPR)](#indice-de-performance-ipr)).
+5. **Mon compte** : nom affiché, mot de passe et suppression définitive du compte.
+6. **Administration** (rôle administrateur) : gestion des utilisateurs (rôles, suppression) et consultation des logs.
+
+Côté technique : Node.js (Express + Mongoose + MongoDB), authentification JWT, rôles Administrateur / Utilisateur, journalisation complète et une [API REST v1](#api-v1-pour-lapplication-ios) prête pour une application iOS.
+
+## Pages publiques (App Store)
+
+Accessibles sans connexion, avec ou sans l'extension `.html` (style : `public/css/site.css`) :
+
+| Page | URL | Usage App Store Connect |
+|---|---|---|
+| Présentation | `/about` | URL marketing |
+| Support | `/support` | URL d'assistance |
+| Confidentialité | `/privacy` | URL de la politique de confidentialité |
 
 ## Démarrage
 
@@ -58,6 +79,7 @@ Envoyer l'en-tête `X-Client: ios` pour que les appels soient identifiés comme 
 | POST | `/auth/logout` | connecté | Révoque le jeton utilisé (les autres appareils restent connectés) → `204` |
 | GET | `/me` | connecté | `{ user }` |
 | PATCH | `/me` | connecté | `{ displayName }` → `{ user }` |
+| DELETE | `/me` | connecté | `{ password }` : supprime définitivement le compte et toutes ses données (sauf administrateur principal) → `204` |
 | PUT | `/me/password` | connecté | `{ currentPassword, newPassword }` → `{ token, user }` (nouveau jeton) |
 | PUT | `/me/target` | connecté | Objectif d'indice : `{ distanceKm, durationSec, avgHeartRate, temperatureC, elevationGainM }` → `{ user }` |
 | DELETE | `/me/target` | connecté | Supprime l'objectif → `{ user }` |

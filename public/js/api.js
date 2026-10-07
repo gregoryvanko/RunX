@@ -77,6 +77,7 @@ window.Api = (() => {
     logout: () => request("POST", "/auth/logout"),
     me: () => request("GET", "/me"),
     updateMe: (displayName) => request("PATCH", "/me", { displayName }),
+    deleteAccount: (password) => request("DELETE", "/me", { password }),
     setTarget: (target) => request("PUT", "/me/target", target),
     deleteTarget: () => request("DELETE", "/me/target"),
     changePassword: (currentPassword, newPassword) => request("PUT", "/me/password", { currentPassword, newPassword }),

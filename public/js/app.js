@@ -772,6 +772,9 @@
     const confirm = h("input", { id: "confirm2", type: "password", autocomplete: "new-password", required: true });
     const savePwd = h("button", { class: "btn", type: "submit" }, "Changer le mot de passe");
     const pwdError = h("p", { class: "error", role: "alert" });
+    const delPwd = h("input", { id: "delete-password", type: "password", autocomplete: "current-password", required: true });
+    const delBtn = h("button", { class: "btn danger", type: "submit" }, "Supprimer mon compte");
+    const delError = h("p", { class: "error", role: "alert" });
 
     render(
       h("h1", {}, "Mon compte"),
@@ -800,7 +803,25 @@
             } catch (err) { pwdError.textContent = err.message; }
           });
         } }, h("h2", {}, "Mot de passe"), field("Mot de passe actuel", current), field("Nouveau mot de passe", next),
-          field("Confirmation", confirm), pwdError, savePwd))
+          field("Confirmation", confirm), pwdError, savePwd)),
+      h("form", { class: "card danger-zone", onsubmit: (e) => {
+        e.preventDefault();
+        delError.textContent = "";
+        if (!delPwd.value) { delError.textContent = "Saisissez votre mot de passe pour confirmer"; return; }
+        withBusy(delBtn, async () => {
+          const ok = await askConfirm("Votre compte, toutes vos courses et votre objectif seront supprimés définitivement. Cette action est irréversible.",
+            { title: "Supprimer mon compte", confirmLabel: "Supprimer définitivement", danger: true });
+          if (!ok) return;
+          try {
+            await Api.deleteAccount(delPwd.value);
+            Api.session.clear();
+            toast("Compte supprimé");
+            location.hash = "#/login";
+          } catch (err) { delError.textContent = err.message; }
+        });
+      } }, h("h2", {}, "Supprimer mon compte"),
+        h("p", { class: "muted" }, "Supprime définitivement votre compte et toutes vos données (courses, objectif). Vos autres appareils seront déconnectés."),
+        field("Mot de passe", delPwd), delError, delBtn)
     );
   }
 

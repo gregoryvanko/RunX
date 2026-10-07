@@ -158,6 +158,8 @@ dialog.confirm p { margin: 0 0 20px; overflow-wrap: anywhere; }
 .hero h1 { color: var(--white); font-size: 1.5rem; margin-bottom: 2px; }
 .hero p { color: #c7d2fe; margin: 0; }
 .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.card.danger-zone { margin-top: 18px; border-color: #f4c7c3; }
+.card.danger-zone h2 { color: var(--danger); }
 
 /* ---------- Tables ---------- */
 .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 14px; }
