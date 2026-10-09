@@ -6,7 +6,7 @@
     {
       "label": "Deploy prod",
       "type": "shell",
-      "command": "./.vscode/deploy.sh",
+      "command": "./deploy.sh",
       "problemMatcher": []
     },
     {
