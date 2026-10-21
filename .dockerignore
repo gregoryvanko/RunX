@@ -14,4 +14,5 @@ coverage
 dist
 build
 .DS_Store
+RunX.code-workspace
 ._*
